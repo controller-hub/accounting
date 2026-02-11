@@ -128,6 +128,50 @@ def test_extracts_next_line_values_for_tx_layout():
     assert parsed.signature_present is True
 
 
+
+
+def test_identify_fl_dr_14_from_consumer_certificate_text():
+    text = "DR-14 Consumer's Certificate of Exemption under Chapter 212, Florida Statutes FLORIDA"
+    form_type, conf = identify_form_type(text)
+    assert form_type == FormType.FL_DR_14
+    assert conf >= 0.95
+
+
+def test_identify_al_ste_1_from_alabama_patterns():
+    text = "HEREBY CERTIFIES CHECK PROPER BOX Alabama Exemption Certificate for Rarestep, Inc. dba Fleetio"
+    form_type, conf = identify_form_type(text)
+    assert form_type == FormType.AL_STE_1
+    assert conf >= 0.9
+
+
+def test_identify_pa_rev_1220_from_title_text():
+    text = "REV-1220 PENNSYLVANIA EXEMPTION CERTIFICATE DEPARTMENT OF REVENUE"
+    form_type, conf = identify_form_type(text)
+    assert form_type == FormType.PA_REV_1220
+    assert conf >= 0.95
+
+
+def test_identify_ny_st_121_from_exempt_use_text():
+    text = "Exempt Use Certificate New York State Department of Taxation and Finance Certificate of Authority"
+    form_type, conf = identify_form_type(text)
+    assert form_type == FormType.NY_ST_121
+    assert conf >= 0.9
+
+
+def test_identify_ny_gov_letter_from_ny_tax_letter_text():
+    text = (
+        "New York State Department of TAXATION and FINANCE Sales Tax Exempt Organizations Unit "
+        "governmental entities Dear Sir or Madam"
+    )
+    form_type, conf = identify_form_type(text)
+    assert form_type == FormType.NY_GOV_LETTER
+    assert conf >= 0.9
+
+
+def test_ny_st_119_1_requires_literal_code():
+    text = "Exempt Organization Certificate New York State Department of Taxation and Finance"
+    form_type, _ = identify_form_type(text)
+    assert form_type != FormType.NY_ST_119_1
 def test_extract_exemption_states_uses_state_specific_form_type():
     parsed = parse_certificate("Ohio Sales and Use Tax Unit Exemption Certificate STEC-B")
     assert parsed.form_type_detected == FormType.OH_STEC_B
