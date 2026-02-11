@@ -90,6 +90,11 @@ def _merge_labels(custom_labels: list[str] | None, default_labels: list[str]) ->
             merged.append(label)
     return merged
 
+
+def _has_form_code(text: str, code: str) -> bool:
+    escaped = re.escape(code.lower())
+    return re.search(rf"(?<![a-z0-9]){escaped}(?![a-z0-9])", text) is not None
+
 def identify_form_type(raw_text: str) -> tuple[FormType, float]:
     """Identify the certificate form type from extracted text."""
     if not raw_text:
@@ -98,12 +103,53 @@ def identify_form_type(raw_text: str) -> tuple[FormType, float]:
     text = raw_text.lower()
     templates = load_config("form_templates.json").get("forms", {})
 
+    # Strong-signal matches first (explicit form numbers / highly specific wording).
+    if _has_form_code(text, "dr-14") or (
+        "consumer's certificate of exemption" in text and "florida" in text
+    ):
+        return FormType.FL_DR_14, 0.98
+
+    if _has_form_code(text, "rev-1220") or (
+        "pennsylvania" in text and "exemption" in text and "certificate" in text
+    ):
+        return FormType.PA_REV_1220, 0.98
+
+    if _has_form_code(text, "01-339"):
+        return FormType.TX_01_339, 0.98
+
+    if _has_form_code(text, "stec-b") or _has_form_code(text, "stec b"):
+        return FormType.OH_STEC_B, 0.98
+
+    if _has_form_code(text, "ste-1") or (
+        "alabama" in text and "exemption certificate" in text and "check proper box" in text
+    ):
+        return FormType.AL_STE_1, 0.96
+
+    if _has_form_code(text, "st-121") or "exempt use certificate" in text:
+        return FormType.NY_ST_121, 0.96
+
+    if (
+        "new york state department of taxation and finance" in text
+        and "dear sir or madam" in text
+        and "governmental entities" in text
+    ):
+        return FormType.NY_GOV_LETTER, 0.97
+
+    if _has_form_code(text, "st-119.1") or _has_form_code(text, "119.1"):
+        return FormType.NY_ST_119_1, 0.96
+
     best_form = FormType.UNKNOWN
     best_count = 0
     best_total = 1
 
     for form_name, cfg in templates.items():
         identifiers = cfg.get("identifiers", [])
+
+        if form_name == "NY_ST_119_1" and not (
+            _has_form_code(text, "st-119.1") or _has_form_code(text, "119.1")
+        ):
+            continue
+
         matched = sum(1 for ident in identifiers if ident and ident.lower() in text)
         if matched == 0:
             continue

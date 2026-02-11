@@ -4,7 +4,6 @@
     "last_updated": "2026-02-11",
     "source": "Phase 0 testing (34 form types) + cert-validation-rules-v2.md Section 3"
   },
-
   "forms": {
     "MTC_UNIFORM": {
       "display_name": "MTC Uniform Sales & Use Tax Exemption/Resale Certificate",
@@ -18,20 +17,48 @@
       "pathway": 6,
       "page_2_states": true,
       "accepted_in": "~38 states (check MTC restrictions for resale-only)",
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date", "exemption_states"],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date",
+        "exemption_states"
+      ],
       "field_labels": {
-        "purchaser_name": ["Name of Firm", "Purchaser", "Buyer"],
-        "purchaser_address": ["Address", "Street Address"],
-        "seller_name": ["Seller", "Vendor", "Name of Seller"],
-        "exemption_reason": ["Reason for exemption", "Type of exemption"],
-        "signature": {"region": "bottom_20_percent"},
-        "cert_date": ["Date"],
-        "exemption_states": {"type": "checkbox_grid", "page": 2}
+        "purchaser_name": [
+          "Name of Firm",
+          "Purchaser",
+          "Buyer"
+        ],
+        "purchaser_address": [
+          "Address",
+          "Street Address"
+        ],
+        "seller_name": [
+          "Seller",
+          "Vendor",
+          "Name of Seller"
+        ],
+        "exemption_reason": [
+          "Reason for exemption",
+          "Type of exemption"
+        ],
+        "signature": {
+          "region": "bottom_20_percent"
+        },
+        "cert_date": [
+          "Date"
+        ],
+        "exemption_states": {
+          "type": "checkbox_grid",
+          "page": 2
+        }
       },
       "restrictions_apply": true,
       "notes": "Must check MTC resale-only states and registration-required states"
     },
-
     "SST_F0003": {
       "display_name": "SST Certificate of Exemption (F0003)",
       "identifiers": [
@@ -43,16 +70,33 @@
       ],
       "pathway": 6,
       "accepted_in": "24 SST member states",
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date", "exemption_states"],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date",
+        "exemption_states"
+      ],
       "field_labels": {
-        "purchaser_name": ["Purchaser", "Buyer Name"],
-        "seller_name": ["Seller"],
-        "exemption_reason": ["Reason for Exemption", "Exemption Type"],
-        "exemption_states": ["State"]
+        "purchaser_name": [
+          "Purchaser",
+          "Buyer Name"
+        ],
+        "seller_name": [
+          "Seller"
+        ],
+        "exemption_reason": [
+          "Reason for Exemption",
+          "Exemption Type"
+        ],
+        "exemption_states": [
+          "State"
+        ]
       },
       "notes": "Reason L (Other) requires sufficient description. 12-month gap rule applies to blankets."
     },
-
     "TX_01_339": {
       "display_name": "Texas Sales and Use Tax Exemption Certification (01-339)",
       "identifiers": [
@@ -62,19 +106,40 @@
         "Texas Comptroller"
       ],
       "pathway": 1,
-      "accepted_in": ["TX"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "TX"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "field_labels": {
-        "purchaser_name": ["Name of purchaser", "Purchaser"],
-        "purchaser_address": ["Address of purchaser"],
-        "seller_name": ["Name of seller", "Seller"],
-        "exemption_reason": ["Nature of business", "Description of items"],
-        "cert_date": ["Date"]
+        "purchaser_name": [
+          "Name of purchaser",
+          "Purchaser"
+        ],
+        "purchaser_address": [
+          "Address of purchaser"
+        ],
+        "seller_name": [
+          "Name of seller",
+          "Seller"
+        ],
+        "exemption_reason": [
+          "Nature of business",
+          "Description of items"
+        ],
+        "cert_date": [
+          "Date"
+        ]
       },
       "expiration": "never",
-      "notes": "DOES NOT REQUIRE A NUMBER TO BE VALID for government entities. TX Tax Code § 151.309."
+      "notes": "DOES NOT REQUIRE A NUMBER TO BE VALID for government entities. TX Tax Code \u00a7 151.309."
     },
-
     "NY_ST_120": {
       "display_name": "New York ST-120 (Resale Certificate)",
       "identifiers": [
@@ -83,53 +148,79 @@
         "Resale Certificate"
       ],
       "pathway": 1,
-      "accepted_in": ["NY"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "purchaser_tax_id", "signature_present", "cert_date"],
-      "entity_restriction": "FOR_PROFIT only — governments and nonprofits cannot use this form",
+      "accepted_in": [
+        "NY"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "purchaser_tax_id",
+        "signature_present",
+        "cert_date"
+      ],
+      "entity_restriction": "FOR_PROFIT only \u2014 governments and nonprofits cannot use this form",
       "notes": "For resale claims only. Must have valid NY Sales Tax Certificate of Authority number."
     },
-
     "NY_ST_121": {
       "display_name": "New York ST-121 (Exempt Use Certificate)",
       "identifiers": [
         "ST-121",
         "Exempt Use Certificate",
-        "Exempt Organization Certificate"
+        "New York State Department of Taxation and Finance"
       ],
       "pathway": 1,
-      "accepted_in": ["NY"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"]
+      "accepted_in": [
+        "NY"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ]
     },
-
     "NY_ST_119_1": {
       "display_name": "New York ST-119.1 (Exempt Organization Certificate)",
       "identifiers": [
         "ST-119.1",
-        "Exempt Organization",
-        "119.1"
+        "119.1",
+        "Exempt Organization Certificate"
       ],
       "pathway": 1,
-      "accepted_in": ["NY"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "signature_present", "cert_date"],
-      "entity_restriction": "NONPROFIT_501C3 and EXEMPT_ORG_OTHER only — government entities CANNOT use this form",
+      "accepted_in": [
+        "NY"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "signature_present",
+        "cert_date"
+      ],
+      "entity_restriction": "NONPROFIT_501C3 and EXEMPT_ORG_OTHER only \u2014 government entities CANNOT use this form",
       "notes": "Three NY pathways are mutually exclusive. Bot must classify entity type BEFORE form validation."
     },
-
     "NY_GOV_LETTER": {
       "display_name": "New York Government Exemption Letter",
       "identifiers": [
-        "Government Purchase",
-        "State of New York",
-        "City of New York",
-        "County of"
+        "New York State Department of Taxation and Finance",
+        "Sales Tax Exempt Organizations Unit",
+        "governmental entities",
+        "Dear Sir or Madam"
       ],
       "pathway": 4,
-      "accepted_in": ["NY"],
-      "required_fields": ["purchaser_name"],
-      "entity_restriction": "Government entities only — nonprofits must use ST-119.1",
+      "accepted_in": [
+        "NY"
+      ],
+      "required_fields": [
+        "purchaser_name"
+      ],
+      "entity_restriction": "Government entities only \u2014 nonprofits must use ST-119.1",
       "notes": "Government letter on official letterhead. No exemption number required."
     },
-
     "OH_STEC_B": {
       "display_name": "Ohio Blanket Exemption Certificate (STEC-B)",
       "identifiers": [
@@ -139,12 +230,20 @@
         "Sales and Use Tax Blanket Exemption Certificate"
       ],
       "pathway": 1,
-      "accepted_in": ["OH"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "OH"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "never",
       "notes": "OH common carrier exemption (Box B(32)) explicitly excludes SaaS."
     },
-
     "OH_DIRECT_PAY": {
       "display_name": "Ohio Direct Pay Permit",
       "identifiers": [
@@ -153,27 +252,38 @@
         "98"
       ],
       "pathway": 7,
-      "accepted_in": ["OH"],
-      "required_fields": ["purchaser_name", "permit_number"],
+      "accepted_in": [
+        "OH"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "permit_number"
+      ],
       "permit_format": "8 digits starting with 98",
-      "notes": "Seller fully protected from collection liability. ORC § 5739.031. Phase 2: cross-reference OH active permits list."
+      "notes": "Seller fully protected from collection liability. ORC \u00a7 5739.031. Phase 2: cross-reference OH active permits list."
     },
-
     "PA_REV_1220": {
       "display_name": "Pennsylvania REV-1220 (Exemption Certificate)",
       "identifiers": [
         "REV-1220",
-        "REV 1220",
-        "Pennsylvania Exemption Certificate",
-        "Commonwealth of Pennsylvania"
+        "PENNSYLVANIA EXEMPTION CERTIFICATE",
+        "Pennsylvania Department of Revenue"
       ],
       "pathway": 1,
-      "accepted_in": ["PA"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "PA"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "never",
       "notes": "VOID UNLESS COMPLETE is enforceable. Box 2 = Political Subdivision. Gov exemption # format: 23-6XXXXXX. 60-day possession window (shorter than standard)."
     },
-
     "IA_31_014A": {
       "display_name": "Iowa Sales/Use/Excise Tax Exemption Certificate (31-014a)",
       "identifiers": [
@@ -182,12 +292,20 @@
         "Iowa Exemption Certificate"
       ],
       "pathway": 1,
-      "accepted_in": ["IA"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "IA"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "3 years (printed on form)",
-      "notes": "B2B exempt for commercial enterprises per § 423.3(104). Gov entities cite § 423.3(78)."
+      "notes": "B2B exempt for commercial enterprises per \u00a7 423.3(104). Gov entities cite \u00a7 423.3(78)."
     },
-
     "MA_ST_2": {
       "display_name": "Massachusetts ST-2 (Exempt Purchaser Certificate)",
       "identifiers": [
@@ -196,13 +314,20 @@
         "Massachusetts ST-2"
       ],
       "pathway": 1,
-      "accepted_in": ["MA"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "signature_present", "cert_date"],
+      "accepted_in": [
+        "MA"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "10 years (per TIR 04-26)",
       "entity_restriction": "501(c)(3) organizations only",
       "notes": "Requires 501(c)(3) determination letter attachment."
     },
-
     "MA_ST_5": {
       "display_name": "Massachusetts ST-5 (Sales Tax Exempt Purchaser Certificate)",
       "identifiers": [
@@ -211,11 +336,18 @@
         "Massachusetts ST-5"
       ],
       "pathway": 1,
-      "accepted_in": ["MA"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "signature_present", "cert_date"],
+      "accepted_in": [
+        "MA"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "never"
     },
-
     "TN_GOV": {
       "display_name": "Tennessee Government Certificate (RV-F1301301)",
       "identifiers": [
@@ -224,12 +356,16 @@
         "TN Government Exemption"
       ],
       "pathway": 4,
-      "accepted_in": ["TN"],
-      "required_fields": ["purchaser_name", "issuing_authority"],
+      "accepted_in": [
+        "TN"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "issuing_authority"
+      ],
       "expiration": "never",
       "notes": "State-issued. TN auditors prefer state forms over SST."
     },
-
     "TN_EXEMPT_ORG": {
       "display_name": "Tennessee Exempt Organization Certificate (RV-F1306901)",
       "identifiers": [
@@ -237,11 +373,15 @@
         "Tennessee Exempt Organization"
       ],
       "pathway": 4,
-      "accepted_in": ["TN"],
-      "required_fields": ["purchaser_name", "issuing_authority"],
+      "accepted_in": [
+        "TN"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "issuing_authority"
+      ],
       "expiration": "state_printed"
     },
-
     "CT_CERT_119": {
       "display_name": "Connecticut CERT-119 (Exempt Org)",
       "identifiers": [
@@ -249,13 +389,20 @@
         "Connecticut Exempt Organization"
       ],
       "pathway": 1,
-      "accepted_in": ["CT"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "signature_present", "cert_date"],
+      "accepted_in": [
+        "CT"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "3 years (form-level instruction, not statute)",
       "retention_years": 6,
-      "retention_citation": "CT Reg. § 12-2-12"
+      "retention_citation": "CT Reg. \u00a7 12-2-12"
     },
-
     "CT_CERT_100": {
       "display_name": "Connecticut CERT-100/101 (Resale)",
       "identifiers": [
@@ -264,12 +411,20 @@
         "Connecticut Resale"
       ],
       "pathway": 1,
-      "accepted_in": ["CT"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "purchaser_tax_id", "signature_present", "cert_date"],
+      "accepted_in": [
+        "CT"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "purchaser_tax_id",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "3 years (form-level instruction)",
       "retention_years": 6
     },
-
     "MD_GOV_1": {
       "display_name": "Maryland Government Exemption Card (GOV-1)",
       "identifiers": [
@@ -278,12 +433,17 @@
         "Comptroller of Maryland"
       ],
       "pathway": 2,
-      "accepted_in": ["MD"],
-      "required_fields": ["purchaser_name", "account_number", "issuing_authority"],
+      "accepted_in": [
+        "MD"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "account_number",
+        "issuing_authority"
+      ],
       "expiration": "never",
       "notes": "Government-issued card. No seller, signature, or description expected."
     },
-
     "MD_NONGOV_1": {
       "display_name": "Maryland Non-Government Exemption Card (NONGOV-1)",
       "identifiers": [
@@ -292,25 +452,36 @@
         "Nonprofit Exemption"
       ],
       "pathway": 3,
-      "accepted_in": ["MD"],
-      "required_fields": ["purchaser_name", "account_number", "issuing_authority", "expiration_date"],
+      "accepted_in": [
+        "MD"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "account_number",
+        "issuing_authority",
+        "expiration_date"
+      ],
       "expiration": "state_printed"
     },
-
     "FL_DR_14": {
       "display_name": "Florida DR-14 (Tax Exemption Certificate)",
       "identifiers": [
         "DR-14",
-        "Florida Tax Exemption",
+        "Consumer's Certificate of Exemption",
         "Florida Department of Revenue"
       ],
       "pathway": 3,
-      "accepted_in": ["FL"],
-      "required_fields": ["purchaser_name", "account_number", "expiration_date"],
+      "accepted_in": [
+        "FL"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "account_number",
+        "expiration_date"
+      ],
       "expiration": "5-year cycle",
       "notes": "Annual resale certificate; 13-character cert number"
     },
-
     "IL_E99": {
       "display_name": "Illinois E-99 (Government Exemption)",
       "identifiers": [
@@ -319,12 +490,16 @@
         "Illinois Department of Revenue"
       ],
       "pathway": 4,
-      "accepted_in": ["IL"],
-      "required_fields": ["purchaser_name", "issuing_authority"],
+      "accepted_in": [
+        "IL"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "issuing_authority"
+      ],
       "expiration": "state_printed (typically 5 years)",
       "notes": "State-issued identity document."
     },
-
     "IL_STAX_70": {
       "display_name": "Illinois STAX-70 (Sales Tax Exemption)",
       "identifiers": [
@@ -332,25 +507,38 @@
         "STAX 70"
       ],
       "pathway": 4,
-      "accepted_in": ["IL"],
-      "required_fields": ["purchaser_name", "issuing_authority"],
+      "accepted_in": [
+        "IL"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "issuing_authority"
+      ],
       "expiration": "state_printed"
     },
-
     "AL_STE_1": {
       "display_name": "Alabama STE-1 (Exemption Certificate)",
       "identifiers": [
         "STE-1",
-        "Alabama Exemption",
-        "Alabama Department of Revenue"
+        "Alabama Exemption Certificate",
+        "Alabama Department of Revenue",
+        "CHECK PROPER BOX"
       ],
       "pathway": 1,
-      "accepted_in": ["AL"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "AL"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "annual (must track independently)",
       "notes": "AL state + local both exempt for SaaS. Cert is insurance."
     },
-
     "WA_RESELLER": {
       "display_name": "Washington Reseller Permit",
       "identifiers": [
@@ -359,12 +547,16 @@
         "WA Reseller"
       ],
       "pathway": 7,
-      "accepted_in": ["WA"],
-      "required_fields": ["purchaser_name", "permit_number"],
+      "accepted_in": [
+        "WA"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "permit_number"
+      ],
       "expiration": "4 years (auto-renewal if good standing)",
       "notes": "Cannot be used to purchase items used in business that are not resold. Misuse: 50% penalty + interest + revocation. WAC 458-20-102."
     },
-
     "VT_S_3": {
       "display_name": "Vermont S-3 (Exemption Certificate)",
       "identifiers": [
@@ -373,10 +565,18 @@
         "Vermont Department of Taxes"
       ],
       "pathway": 1,
-      "accepted_in": ["VT"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"]
+      "accepted_in": [
+        "VT"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ]
     },
-
     "AZ_5000": {
       "display_name": "Arizona Form 5000 (Transaction Privilege Tax)",
       "identifiers": [
@@ -386,12 +586,20 @@
         "ADOR"
       ],
       "pathway": 1,
-      "accepted_in": ["AZ"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
+      "accepted_in": [
+        "AZ"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
       "expiration": "period_cert (tribal certs use printed period dates)",
       "notes": "Multiple form revisions valid (9/21 and 8/25 both acceptable)."
     },
-
     "KY_51A126": {
       "display_name": "Kentucky 51A126 (Exemption Certificate)",
       "identifiers": [
@@ -400,12 +608,20 @@
         "Commonwealth of Kentucky"
       ],
       "pathway": 1,
-      "accepted_in": ["KY"],
-      "required_fields": ["purchaser_name", "purchaser_address", "seller_name", "exemption_reason", "signature_present", "cert_date"],
-      "expiration": "5 years (not printed on form — must track independently)",
-      "notes": "KRS § 139.270"
+      "accepted_in": [
+        "KY"
+      ],
+      "required_fields": [
+        "purchaser_name",
+        "purchaser_address",
+        "seller_name",
+        "exemption_reason",
+        "signature_present",
+        "cert_date"
+      ],
+      "expiration": "5 years (not printed on form \u2014 must track independently)",
+      "notes": "KRS \u00a7 139.270"
     },
-
     "FEDERAL_SF_1094": {
       "display_name": "Federal Tax Exemption Certificate (SF-1094)",
       "identifiers": [
@@ -415,11 +631,12 @@
       ],
       "pathway": 5,
       "accepted_in": "all_states",
-      "required_fields": ["purchaser_name"],
+      "required_fields": [
+        "purchaser_name"
+      ],
       "expiration": "never",
       "notes": "Federal document. Auto-approve. FAR 29.305."
     },
-
     "FEDERAL_GSA_CARD": {
       "display_name": "Federal GSA SmartPay Card",
       "identifiers": [
@@ -430,11 +647,12 @@
       ],
       "pathway": 5,
       "accepted_in": "all_states",
-      "required_fields": ["purchaser_name"],
+      "required_fields": [
+        "purchaser_name"
+      ],
       "expiration": "never",
       "notes": "Federal Supremacy Clause. 6th digit identifies card type."
     },
-
     "FEDERAL_LETTERHEAD": {
       "display_name": "Federal Agency Letterhead",
       "identifiers": [
@@ -442,34 +660,50 @@
         "United States",
         "U.S. Government",
         "Federal",
-        "U.S. Army", "U.S. Navy", "U.S. Air Force", "U.S. Marine",
-        "U.S. Coast Guard", "Department of Defense"
+        "U.S. Army",
+        "U.S. Navy",
+        "U.S. Air Force",
+        "U.S. Marine",
+        "U.S. Coast Guard",
+        "Department of Defense"
       ],
       "pathway": 5,
       "accepted_in": "all_states",
-      "required_fields": ["purchaser_name"],
+      "required_fields": [
+        "purchaser_name"
+      ],
       "expiration": "never"
     }
   },
-
   "entity_form_incompatible": {
     "_comment": "Specific entity-type/form-type combinations that are invalid.",
     "rules": [
       {
         "state": "NY",
-        "entity_types": ["STATE_GOVERNMENT", "LOCAL_GOVERNMENT", "FEDERAL_GOVERNMENT"],
+        "entity_types": [
+          "STATE_GOVERNMENT",
+          "LOCAL_GOVERNMENT",
+          "FEDERAL_GOVERNMENT"
+        ],
         "form": "NY_ST_119_1",
         "message": "NY government entities cannot use ST-119.1. Use government letter on official letterhead."
       },
       {
         "state": "NY",
-        "entity_types": ["NONPROFIT_501C3", "EXEMPT_ORG_OTHER", "RELIGIOUS", "EDUCATIONAL"],
+        "entity_types": [
+          "NONPROFIT_501C3",
+          "EXEMPT_ORG_OTHER",
+          "RELIGIOUS",
+          "EDUCATIONAL"
+        ],
         "form": "NY_GOV_LETTER",
         "message": "NY nonprofits must use ST-119.1, not government letter."
       },
       {
         "state": "NY",
-        "entity_types": ["FEDERAL_GOVERNMENT"],
+        "entity_types": [
+          "FEDERAL_GOVERNMENT"
+        ],
         "form": "NY_ST_119_1",
         "message": "Federal entities cannot use NY ST-119.1. Use federal letterhead or SF-1094."
       }
