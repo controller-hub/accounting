@@ -223,6 +223,17 @@ def check_seller_name(fields: ExtractedFields, pathway: ValidationPathway) -> Ch
             recommendation="List full legal seller name (Fleetio, Inc.).",
         )
 
+    if lower.endswith("from:") or lower.startswith("items described below"):
+        return CheckResult(
+            check_name="completeness.seller_name",
+            passed=False,
+            severity=CheckSeverity.SOFT_FLAG,
+            message=(
+                f"Seller field appears to contain form instructions instead of a vendor name: '{seller}'."
+            ),
+            recommendation="List the legal seller/vendor name (Fleetio, Inc.) in the seller field.",
+        )
+
     return CheckResult(
         check_name="completeness.seller_name",
         passed=False,
