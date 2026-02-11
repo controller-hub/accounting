@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "last_updated": "2026-02-11",
+    "source": "cert-validation-rules-v2.md Section 4D-4E, Perplexity statutory research",
+    "context": "Fleetio is a fleet management SaaS product. These rules determine whether a claimed exemption type makes sense for a SaaS purchase."
+  },
+
+  "exemption_validity_for_saas": {
+    "GOVERNMENT": {
+      "valid": true,
+      "action": "accept",
+      "note": "Many fleet customers are government entities. Standard Fleetio customer profile.",
+      "applies_to_entity_types": ["FEDERAL_GOVERNMENT", "STATE_GOVERNMENT", "LOCAL_GOVERNMENT", "TRIBAL"]
+    },
+    "NONPROFIT": {
+      "valid": true,
+      "action": "accept",
+      "note": "Nonprofits often have fleets (Goodwill, Salvation Army, transit nonprofits, etc.).",
+      "applies_to_entity_types": ["NONPROFIT_501C3", "EXEMPT_ORG_OTHER", "RELIGIOUS", "EDUCATIONAL"]
+    },
+    "RESALE": {
+      "valid": "conditional",
+      "action": "apply_resale_tiers",
+      "note": "Depends on whether the purchaser genuinely resells SaaS vs. consumes it internally. See resale_tiers below."
+    },
+    "MANUFACTURING": {
+      "valid": false,
+      "action": "flag_human_review",
+      "reason": "Manufacturing exemptions cover property used directly in production. Fleet management SaaS is business support, not production input.",
+      "citations": ["PA 72 PS § 7201(m)", "OH ORC § 5739.02(B)(42)", "NY Tax Law § 1115(a)(12)"],
+      "review_note": "Entity may qualify under a different exemption basis (e.g., if the entity is a government or nonprofit, suggest correct form)."
+    },
+    "AGRICULTURE": {
+      "valid": false,
+      "action": "flag_human_review",
+      "reason": "No state extends agricultural exemptions to software. Ag exemptions cover TPP and enumerated equipment/supplies only.",
+      "citations": ["TN DOR guidance", "IA § 423.3(104)", "Perplexity Block 6 research"],
+      "review_note": "Entity may qualify under alternative exemption basis. Farms with fleet vehicles may be legitimate Fleetio customers — the issue is the exemption category, not the entity."
+    },
+    "COMMON_CARRIER": {
+      "valid": false,
+      "action": "flag_likely_invalid",
+      "reason": "OH common carrier exemption (ORC § 5739.02(B)(32)) covers items 'physically part of the vehicle.' Explicitly excludes 'office equipment, computers, building supplies or anything else that is not part of the motor vehicles.' Cloud-accessed SaaS does not qualify.",
+      "citations": ["ORC § 5739.02(B)(32)"],
+      "states_affected": ["OH"],
+      "note": "This exemption type is essentially never valid for SaaS. Flag as likely invalid but route to human review rather than auto-reject."
+    },
+    "INDUSTRIAL_RD": {
+      "valid": "questionable",
+      "action": "flag_human_review",
+      "reason": "Industrial/R&D exemption is a significant stretch for fleet management SaaS. Possible only if customer is using fleet data for R&D purposes.",
+      "review_note": "Low probability of validity but not auto-reject."
+    },
+    "DIRECT_PAY": {
+      "valid": true,
+      "action": "accept_permit",
+      "note": "Direct Pay permits shift tax collection responsibility to purchaser. Seller is fully protected. Validate permit number format.",
+      "validation": "OH: 8-digit starting with 98. Check against OH active permits list in Phase 2."
+    },
+    "CONSTRUCTION": {
+      "valid": "conditional",
+      "action": "accept_with_note",
+      "note": "Some states have specific contractor exemption rules. Fleet SaaS for a construction fleet is plausible — the contractor exemption category is the concern, not the use case.",
+      "review_note": "Accept but note that contractor exemptions vary significantly by state."
+    },
+    "DIPLOMATIC": {
+      "valid": true,
+      "action": "accept",
+      "note": "Diplomatic/foreign mission exemptions are valid but rare for Fleetio's customer base."
+    },
+    "OTHER": {
+      "valid": "unknown",
+      "action": "flag_human_review",
+      "note": "Unrecognized exemption category — requires human classification."
+    }
+  },
+
+  "resale_tiers": {
+    "_comment": "When a customer claims resale exemption on SaaS, classify their business into these tiers based on business description.",
+
+    "TIER_1_STRONG": {
+      "label": "Strong resale claim",
+      "action": "accept",
+      "patterns": [
+        "reseller", "distributor", "VAR", "value added reseller",
+        "OEM", "telematics", "software reseller", "IT services",
+        "technology solutions", "fleet analytics", "fleet solutions provider",
+        "managed services", "MSP"
+      ],
+      "description": "Explicitly resells software or technology services"
+    },
+    "TIER_2_PLAUSIBLE": {
+      "label": "Plausible resale claim",
+      "action": "accept_with_note",
+      "patterns": [
+        "leasing", "finance", "financial services", "rental",
+        "captive", "fleet leasing", "vehicle leasing", "equipment rental"
+      ],
+      "description": "Captive finance/leasing company that may bundle SaaS with vehicle leases",
+      "note": "TX resale nuance: 01-339 covers items 'resold, rented or leased.' If SaaS subscription transfers to lessee, resale may apply."
+    },
+    "TIER_3_WEAK": {
+      "label": "Weak resale claim — needs review",
+      "action": "flag_human_review",
+      "patterns": [
+        "HVAC", "plumbing", "construction", "landscaping",
+        "cleaning", "janitorial", "hauling", "trucking",
+        "moving", "delivery", "maintenance", "repair"
+      ],
+      "description": "End-user service business claiming resale with no obvious resale channel for SaaS",
+      "review_note": "These businesses typically consume fleet SaaS internally. Resale claim is suspicious but not impossible."
+    },
+    "TIER_4_IMPLAUSIBLE": {
+      "label": "Implausible resale claim — likely invalid",
+      "action": "flag_likely_invalid",
+      "patterns": [
+        "boat club", "recreation", "country club", "gym",
+        "fitness", "personal use", "residential", "homeowner",
+        "hobby", "ranch", "farm"
+      ],
+      "description": "Business clearly consuming the product internally with no conceivable resale mechanism",
+      "review_note": "Route to human review but recommend rejection. WA penalty: 50% of tax due + interest + permit revocation (WAC 458-20-102)."
+    }
+  },
+
+  "wrong_box_rules": {
+    "_comment": "How to handle when a legitimately exempt entity checks the wrong exemption category box.",
+
+    "sst_states": {
+      "action": "note_only",
+      "reason": "SST Four Corners doctrine: if cert is fully completed and exemption was statutorily available, seller is protected regardless of category checked.",
+      "severity": "INFO"
+    },
+    "good_faith_states": {
+      "action": "flag_human_review",
+      "reason": "Good faith states (TX, NY, PA, CA, etc.) may scrutinize category mismatch. PA requirement #4: 'property/service consistent with exemption to which customer is entitled.'",
+      "severity": "REASONABLENESS",
+      "exception": "Government entities checking wrong category box → NOTE only (entity is genuinely exempt regardless)"
+    },
+    "case_law_note": "As of February 2026, no case law exists where a seller lost protection solely because a legitimately exempt buyer checked the wrong exemption category box. PA, TX, and NY auditors resolve with corrected cert, not retroactive tax."
+  },
+
+  "seller_name_variants": {
+    "_comment": "Acceptable variants of Fleetio's name on certificates.",
+    "exact_matches": ["Fleetio", "Fleetio, Inc.", "Fleetio Inc", "Fleetio Inc."],
+    "acceptable_variants": [
+      "Rarestep Inc",
+      "Rarestep, Inc.",
+      "Rarestep Inc dba Fleetio",
+      "Rarestep, Inc. dba Fleetio",
+      "Fleetio Technologies",
+      "Fleetio Software"
+    ],
+    "address_typos_acceptable": true,
+    "completely_different_company": "HARD_FAIL"
+  }
+}
