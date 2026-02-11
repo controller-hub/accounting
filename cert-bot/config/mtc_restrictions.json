@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "last_updated": "2026-02-11",
+    "source": "Perplexity MTC footnote research, confirmed against MTC.gov"
+  },
+
+  "resale_only_states": {
+    "_comment": "These states ONLY accept the MTC Uniform Certificate for resale exemptions. Government, nonprofit, or other entity-based exemptions require state-specific forms or SST F0003.",
+
+    "AZ": {
+      "citation": "MTC footnote #3",
+      "restriction": "Not for any other statutory deduction or exemption",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["AZ Form 5000", "SST F0003"]
+    },
+    "ID": {
+      "citation": "MTC footnote #11; Idaho Code § 63-3622(c)",
+      "restriction": "Resale only",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["ID Form ST-101", "SST F0003"]
+    },
+    "RI": {
+      "citation": "MTC footnote #26",
+      "restriction": "When item will be resold in same form",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["SST F0003"]
+    },
+    "TN": {
+      "citation": "MTC footnote #28",
+      "restriction": "May not be used for any other type of exemption",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["TN state forms (RV-F1301301 gov, RV-F1306901 exempt org)", "SST F0003"]
+    },
+    "VT": {
+      "citation": "MTC footnote #30",
+      "restriction": "Resale for goods only, not component parts to service. Not for contractors.",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["VT Form S-3", "SST F0003"]
+    },
+    "WA": {
+      "citation": "MTC footnote #31",
+      "restriction": "Misuse may result in interest and penalties",
+      "bot_action": "accept_with_penalty_warning",
+      "note": "WA is less strict — accept MTC but add penalty warning note",
+      "alternative_forms": ["WA Reseller Permit"]
+    },
+    "WI": {
+      "citation": "MTC footnote #32",
+      "restriction": "Resale only",
+      "bot_action": "reject_non_resale",
+      "alternative_forms": ["WI Form S-211", "SST F0003"]
+    }
+  },
+
+  "registration_required_states": {
+    "_comment": "These states require additional registration numbers when using the MTC form.",
+
+    "PA": {
+      "field": "pa_license_number",
+      "citation": "MTC footnote #25",
+      "requirement": "Must include PA Sales and Use Tax license number",
+      "bot_action": "fail_if_missing"
+    },
+    "MD": {
+      "field": "md_registration_number",
+      "citation": "MTC footnote",
+      "requirement": "Must include MD sales and use tax registration number",
+      "bot_action": "fail_if_missing"
+    }
+  },
+
+  "unconfirmed_states": {
+    "_comment": "MTC acceptance status not directly confirmed for these states. Conservative approach: accept with note.",
+    "CT": {"note": "Need direct verification of MTC acceptance for non-resale"},
+    "DC": {"note": "Need direct verification of MTC acceptance for non-resale"}
+  },
+
+  "correction_template": "MTC Uniform Certificate is accepted for resale exemptions only in {state}. Your entity-based exemption requires {alternative_forms}. Please resubmit using the appropriate form."
+}

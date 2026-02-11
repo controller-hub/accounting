@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "last_updated": "2026-02-11",
+    "source": "cert-validation-rules-v2.md (97% confidence)",
+    "notes": "Four-source validated: Rules Engine × Perplexity ×2 × Avalara SW052001"
+  },
+
+  "sst_member_states": [
+    "AR", "GA", "IA", "IN", "KS", "KY", "MI", "MN",
+    "NC", "ND", "NE", "NJ", "NV", "OH", "OK", "RI",
+    "SD", "TN", "UT", "VT", "WA", "WI", "WV", "WY"
+  ],
+
+  "no_sales_tax_states": ["AK", "DE", "MT", "NH", "OR"],
+
+  "seller_protection": {
+    "default_possession_window_days": 90,
+    "sst_cure_period_days": 120,
+    "state_overrides": {
+      "PA": {
+        "possession_window_days": 60,
+        "citation": "61 PA Code § 32.2",
+        "note": "Shorter than standard 90 days"
+      }
+    }
+  },
+
+  "taxability": {
+    "_comment": "SaaS taxability for Fleetio (fleet management SaaS). taxable=true means cert IS required.",
+
+    "AL": {"taxable": false, "note": "State + local exempt", "source": "Kasey confirmed; old letter ruling stale"},
+    "AK": {"taxable": false, "no_sales_tax": true},
+    "AZ": {"taxable": true, "rate": "5.6% + local", "classification": "TPP", "citation": "ARS § 42-5071"},
+    "AR": {"taxable": false, "sst": true},
+    "CA": {"taxable": false, "citation": "CA Rev & Tax Code § 6421"},
+    "CO": {"taxable": false, "note": "State exempt; Aurora collected locally. Avalara SW052001 = E at state level.", "local_exceptions": ["Aurora"]},
+    "CT": {"taxable": true, "rate_b2b": "1%", "rate_b2c": "6.35%", "b2b_distinction": true, "classification": "Computer & data processing services", "citation": "Conn. Gen. Stat. § 12-407; CT DRS Special Notice 2019(8)"},
+    "DE": {"taxable": false, "no_sales_tax": true},
+    "DC": {"taxable": true, "rate": "6%", "classification": "Digital goods", "citation": "DC Code § 47-2001"},
+    "FL": {"taxable": false},
+    "GA": {"taxable": false, "sst": true},
+    "HI": {"taxable": true, "rate": "4% + local", "classification": "General Excise Tax", "citation": "HRS § 237"},
+    "ID": {"taxable": false},
+    "IL": {"taxable": false, "note": "State exempt; Chicago PPLTT 15% effective 1/1/2026 handled by Avalara", "local_exceptions": ["Chicago"]},
+    "IN": {"taxable": false, "sst": true},
+    "IA": {"taxable": true, "rate": "6% + local", "b2b_distinction": true, "b2b_note": "B2B exempt for commercial enterprises per § 423.3(104). Certs still required.", "citation": "Iowa Code § 423.3(104); Iowa Admin. Code r. 701-225.7"},
+    "KS": {"taxable": false, "sst": true},
+    "KY": {"taxable": true, "rate": "6%", "classification": "Prewritten software (remotely accessed)", "citation": "KRS § 139.200"},
+    "LA": {"taxable": true, "rate": "5% + local", "classification": "Taxable service", "citation": "LAC 61:I.4301"},
+    "ME": {"taxable": false},
+    "MD": {"taxable": true, "rate_b2b": "3%", "rate_b2c": "6%", "b2b_distinction": true, "effective": "2025-07-01", "classification": "Data/IT services tax", "citation": "Budget Reconciliation & Financing Act of 2025; NAICS 518, 519, 5132, 5415"},
+    "MA": {"taxable": true, "rate": "6.25%", "classification": "Prewritten software (all delivery methods)", "citation": "MGL c.64H § 1"},
+    "MI": {"taxable": false, "sst": true},
+    "MN": {"taxable": false, "citation": "MN DOR: cloud SaaS not taxable. Downloaded prewritten IS taxable. Avalara SW052001 = E.", "sst": true},
+    "MS": {"taxable": false, "citation": "Avalara SW052001 = E. Authoritative.", "source": "Kasey confirmed Avalara authoritative"},
+    "MO": {"taxable": false},
+    "MT": {"taxable": false, "no_sales_tax": true},
+    "NE": {"taxable": false, "note": "NE does not tax pure SaaS. Security services exception (GIL 1-15-1) not applicable to fleet/telematics.", "sst": true},
+    "NV": {"taxable": false, "sst": true},
+    "NH": {"taxable": false, "no_sales_tax": true},
+    "NJ": {"taxable": false, "citation": "NJ TB-72 (July 2013): SaaS is a service, not TPP. Avalara SW052001 = E.", "sst": true},
+    "NM": {"taxable": true, "rate": "4.88% + local", "classification": "Gross receipts tax", "citation": "NM § 7-9-3"},
+    "NY": {"taxable": true, "rate": "4% + local (up to ~8.875%)", "classification": "Prewritten software (all delivery methods)", "citation": "TB-ST-128; NY Tax Law § 1101(b)(6)"},
+    "NC": {"taxable": false, "sst": true},
+    "ND": {"taxable": false, "sst": true},
+    "OH": {"taxable": true, "rate": "5.75% + local", "classification": "Automatic data processing/computer services", "b2b_distinction": true, "citation": "OAC Rule 5703-9-46"},
+    "OK": {"taxable": false, "sst": true},
+    "OR": {"taxable": false, "no_sales_tax": true},
+    "PA": {"taxable": true, "rate": "6% + local", "classification": "TPP (canned software)", "citation": "72 PS § 7201(m)"},
+    "RI": {"taxable": true, "rate": "7%", "classification": "Prewritten software", "citation": "RIGL § 44-18-7", "sst": true},
+    "SC": {"taxable": true, "rate": "6% + local", "classification": "TPP (communications services)", "citation": "SC Code § 12-36-910"},
+    "SD": {"taxable": true, "rate": "4.2% + local", "classification": "Product transferred electronically", "citation": "SDCL § 10-45-2", "sst": true, "note": "Corrected from exempt in v1.0"},
+    "TN": {"taxable": true, "rate": "7% + local (up to ~10%)", "classification": "Remotely accessed prewritten software", "citation": "TCA § 67-6-231, § 67-6-102(49)", "sst": true},
+    "TX": {"taxable": true, "rate": "80% taxable (effective ~5%)", "classification": "Data processing services", "citation": "TX Tax Code § 151.351; Comptroller Rule § 3.330 (updated Apr 2025)"},
+    "UT": {"taxable": true, "rate": "4.85% + local", "classification": "Prewritten software", "citation": "UCA § 59-12-103", "sst": true},
+    "VT": {"taxable": true, "rate": "6% + local", "classification": "Prewritten software", "citation": "32 VSA § 9771", "sst": true},
+    "VA": {"taxable": false},
+    "WA": {"taxable": true, "rate": "6.5% + local", "classification": "Digital products/services", "citation": "RCW 82.04.050(6)", "sst": true},
+    "WV": {"taxable": true, "rate": "6% + local", "classification": "Prewritten software", "citation": "WV Code § 11-15-2", "sst": true},
+    "WI": {"taxable": false, "citation": "WI DOR: SaaS = nontaxable data processing. Avalara SW052001 = E.", "sst": true},
+    "WY": {"taxable": false, "sst": true}
+  },
+
+  "expiration_rules": {
+    "_comment": "State-specific certificate expiration rules. rule types: never, fixed_years, annual, state_printed, form_specific, period_cert",
+
+    "DEFAULT": {"rule": "never", "note": "Default for states not listed"},
+    "FEDERAL": {"rule": "never", "citation": "Supremacy Clause; McCulloch v. Maryland (1819)"},
+
+    "TX": {"rule": "never", "citation": "TX Tax Code § 151.309"},
+    "OH": {"rule": "never", "citation": "ORC § 5739.02", "note": "STEC-B blanket certs"},
+    "NY": {"rule": "never", "citation": "Tax Law § 1132", "retention_years": 3, "retention_note": "3 years from due date of last return using cert"},
+    "PA": {"rule": "never", "note": "VOID UNLESS COMPLETE enforceable but no expiration date"},
+    "CO": {"rule": "never"},
+    "UT": {"rule": "never", "note": "TC-721G blanket"},
+    "ID": {"rule": "never", "note": "Blanket certs"},
+    "MN": {"rule": "never", "note": "Until cancelled"},
+
+    "FL": {"rule": "fixed_years", "years": 5, "citation": "FL Stat. § 212.084"},
+    "CT": {"rule": "fixed_years", "years": 3, "citation": "Form instructions CERT-100/119 (form-level, not statute)", "retention_years": 6, "retention_citation": "CT Reg. § 12-2-12"},
+    "KY": {"rule": "fixed_years", "years": 5, "citation": "KRS § 139.270", "note": "Not printed on form — must track independently"},
+    "WA": {"rule": "fixed_years", "years": 4, "citation": "WAC 458-20-102(4)", "note": "Reseller permits; auto-renewal if in good standing"},
+    "IA": {"rule": "fixed_years", "years": 3, "note": "Printed on form; also subject to SST 12-month gap rule"},
+
+    "AL": {"rule": "annual", "citation": "Ala. Admin. Code r. 810-6-5-.02", "note": "Must track independently — not always printed on form"},
+
+    "IL": {"rule": "state_printed", "typical_years": 5, "note": "State-issued E-99/STAX-70 have printed expiration"},
+    "MD": {
+      "rule": "form_specific",
+      "forms": {
+        "GOV-1": {"rule": "never"},
+        "NONGOV-1": {"rule": "state_printed"}
+      }
+    },
+    "TN": {
+      "rule": "form_specific",
+      "forms": {
+        "gov": {"rule": "never"},
+        "exempt_org": {"rule": "state_printed"},
+        "ag": {"rule": "fixed_years", "years": 4}
+      }
+    },
+    "MA": {
+      "rule": "form_specific",
+      "forms": {
+        "ST-2": {"rule": "fixed_years", "years": 10, "citation": "TIR 04-26"},
+        "ST-5": {"rule": "never"}
+      }
+    },
+    "AZ": {"rule": "period_cert", "note": "Tribal certs use printed period dates"},
+
+    "SST_GAP_RULE": {
+      "applies_to": "All 24 SST member states — blanket certs only",
+      "rule": "Blanket cert lapses for FUTURE transactions after 12 consecutive months with no purchase between same seller and purchaser",
+      "retroactive": false,
+      "note": "Prior exempt sales while cert was active are NOT retroactively invalidated. Obtain fresh cert for new transaction after gap.",
+      "bot_action": "Mark as stale — renewal required. Do NOT auto-invalidate prior periods.",
+      "citation": "SSUTA Rule 317; SST Audit Manual",
+      "phase": "Phase 2 — requires transaction data"
+    }
+  },
+
+  "cert_age_flags": {
+    "0_to_3_years": {"action": "accept", "note": null},
+    "3_to_4_years": {"action": "accept", "note": "Renewal recommended within next year"},
+    "4_to_5_years": {"action": "accept_with_flag", "note": "Certificate aging; request updated cert"},
+    "5_plus_years": {"action": "accept_with_flag", "note": "Certificate is 5+ years old; best practice is to obtain updated documentation"}
+  },
+
+  "tax_id_patterns": {
+    "TX": {"pattern": "^[13]\\d{10}$", "description": "11 digits, starts with 1 or 3", "gov_required": false},
+    "OH_DIRECT_PAY": {"pattern": "^98\\d{6}$", "description": "8 digits starting with 98"},
+    "PA_GOV": {"pattern": "^23-6\\d{6}$", "description": "Government format 23-6XXXXXX"},
+    "FEIN": {"pattern": "^\\d{2}-?\\d{7}$", "description": "Federal EIN XX-XXXXXXX (9 digits)"},
+    "FL": {"description": "13-character certificate number on DR-14"},
+    "IL": {"description": "8 digits typically"},
+    "GA": {"description": "Numeric, varies"}
+  }
+}
