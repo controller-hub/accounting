@@ -900,3 +900,59 @@ def check_saas_taxability(state: str) -> CheckResult:
         severity=CheckSeverity.INFO,
         message=f"SaaS taxability not found for {state_upper}; verify state treatment manually.",
     )
+
+
+
+def _normalize_name(value: str | None) -> str:
+    if not value:
+        return ""
+    cleaned = re.sub(r"[^a-z0-9\s]", "", value.lower())
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
+def find_duplicates(results: list[dict]) -> list[tuple[str, str]]:
+    """
+    Identify duplicate certificates in a batch.
+
+    Fingerprint algorithm:
+    - Normalize customer_name (lowercase, strip whitespace, remove punctuation)
+    - Combine: customer_name + state + exemption_category + cert_date
+    - If two certs have identical fingerprints, they're duplicates
+
+    For certs with no cert_date, use customer_name + state + form_type as fingerprint.
+
+    Returns list of tuples: (cert_id_1, cert_id_2) indicating duplicate pairs.
+    Mark the NEWER cert (by cert_date or file modification date) as the duplicate.
+    """
+    buckets: dict[str, list[dict]] = {}
+    for result in results:
+        customer = _normalize_name(result.get("customer_name"))
+        state = (result.get("state") or "").strip().upper()
+        exemption_category = (result.get("exemption_category") or "").strip().lower()
+        cert_date = result.get("cert_date") or result.get("expiration_date") or ""
+        form_type = (result.get("form_type") or "").strip()
+
+        if cert_date:
+            fingerprint = f"{customer}|{state}|{exemption_category}|{cert_date}"
+        else:
+            fingerprint = f"{customer}|{state}|{form_type}"
+
+        buckets.setdefault(fingerprint, []).append(result)
+
+    duplicates: list[tuple[str, str]] = []
+    for bucket in buckets.values():
+        if len(bucket) < 2:
+            continue
+
+        def sort_key(item: dict):
+            date_marker = item.get("cert_date") or item.get("validated_at") or ""
+            return str(date_marker)
+
+        sorted_bucket = sorted(bucket, key=sort_key)
+        canonical = sorted_bucket[0]
+        canonical_id = str(canonical.get("cert_id") or canonical.get("avalara_cert_id") or "unknown")
+        for duplicate in sorted_bucket[1:]:
+            dup_id = str(duplicate.get("cert_id") or duplicate.get("avalara_cert_id") or "unknown")
+            duplicates.append((canonical_id, dup_id))
+
+    return duplicates
