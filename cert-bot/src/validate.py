@@ -79,6 +79,12 @@ def run_all_checks(
     results.append(check_future_date(fields))
     results.append(check_cert_age(fields))
 
+    results.append(check_exemption_for_saas(fields, entity_type, state))
+    if _derive_exemption_category(fields) == ExemptionCategory.RESALE:
+        results.append(check_resale_tier(fields, entity_type))
+    results.append(check_entity_exemption_match(fields, entity_type, state))
+    results.append(check_saas_taxability(state))
+
     return [r for r in results if r is not None]
 
 
@@ -690,4 +696,207 @@ def check_cert_age(fields: ExtractedFields) -> CheckResult | None:
             "note", "Certificate is 5+ years old; best practice is to obtain updated documentation"
         ),
         recommendation="Obtain updated documentation as best practice.",
+    )
+
+
+def check_exemption_for_saas(
+    fields: ExtractedFields,
+    entity_type: EntityType,
+    state: str,
+) -> CheckResult | None:
+    rules = load_config("reasonableness_rules.json").get("exemption_validity_for_saas", {})
+    category = _derive_exemption_category(fields)
+    if category is None:
+        return None
+
+    category_cfg = rules.get(category.name, {})
+    state_upper = (state or "").strip().upper()
+
+    if category in {ExemptionCategory.GOVERNMENT, ExemptionCategory.NONPROFIT, ExemptionCategory.DIRECT_PAY}:
+        note = category_cfg.get("note", "Exemption category is generally plausible for SaaS.")
+        return CheckResult(
+            check_name="reasonableness.exemption_for_saas",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=note,
+        )
+
+    if category == ExemptionCategory.CONSTRUCTION:
+        return CheckResult(
+            check_name="reasonableness.exemption_for_saas",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=category_cfg.get("note", "Construction claims are plausible for fleet SaaS but state-specific."),
+            recommendation=category_cfg.get("review_note"),
+        )
+
+    if category == ExemptionCategory.RESALE:
+        return CheckResult(
+            check_name="reasonableness.exemption_for_saas",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=category_cfg.get("note", "Resale claims require tiering review."),
+        )
+
+    if category in {
+        ExemptionCategory.MANUFACTURING,
+        ExemptionCategory.AGRICULTURE,
+        ExemptionCategory.COMMON_CARRIER,
+        ExemptionCategory.INDUSTRIAL_RD,
+    }:
+        citations = category_cfg.get("citations", [])
+        cite = f" Citations: {', '.join(citations)}." if citations else ""
+        msg = category_cfg.get("reason", "Exemption category appears implausible for SaaS purchases.")
+        if category == ExemptionCategory.COMMON_CARRIER and state_upper and state_upper != "OH":
+            msg = f"Common carrier exemption is primarily an Ohio concept and is generally not valid for SaaS in {state_upper}."
+        return CheckResult(
+            check_name="reasonableness.exemption_for_saas",
+            passed=False,
+            severity=CheckSeverity.REASONABLENESS,
+            message=f"{msg}{cite}",
+            recommendation=category_cfg.get("review_note") or "Route to human review.",
+        )
+
+    return CheckResult(
+        check_name="reasonableness.exemption_for_saas",
+        passed=False,
+        severity=CheckSeverity.REASONABLENESS,
+        message=f"Exemption category '{category.value}' requires human review for SaaS reasonableness.",
+        recommendation="Route to tax reviewer for classification.",
+    )
+
+
+def check_resale_tier(
+    fields: ExtractedFields,
+    entity_type: EntityType,
+) -> CheckResult | None:
+    if _derive_exemption_category(fields) != ExemptionCategory.RESALE:
+        return None
+
+    tiers = load_config("reasonableness_rules.json").get("resale_tiers", {})
+    text = " ".join(filter(None, [fields.business_type, fields.purchaser_name])).lower()
+
+    tier_map = [
+        ("TIER_1_STRONG", "STRONG", True, CheckSeverity.INFO),
+        ("TIER_2_PLAUSIBLE", "PLAUSIBLE", True, CheckSeverity.INFO),
+        ("TIER_3_WEAK", "WEAK", False, CheckSeverity.REASONABLENESS),
+        ("TIER_4_IMPLAUSIBLE", "IMPLAUSIBLE", False, CheckSeverity.REASONABLENESS),
+    ]
+
+    for key, label, passed, severity in tier_map:
+        cfg = tiers.get(key, {})
+        for pattern in cfg.get("patterns", []):
+            if pattern.lower() in text:
+                outcome = "accepted" if passed else "flagged for review"
+                return CheckResult(
+                    check_name="reasonableness.resale_tier",
+                    passed=passed,
+                    severity=severity,
+                    message=f"Resale tier={label} based on pattern '{pattern}' in purchaser profile; claim {outcome}.",
+                    field="business_type",
+                    recommendation=cfg.get("note") or cfg.get("review_note"),
+                )
+
+    return CheckResult(
+        check_name="reasonableness.resale_tier",
+        passed=False,
+        severity=CheckSeverity.REASONABLENESS,
+        message="Resale tier=WEAK by default (no known resale pattern matched); conservative human review required.",
+        field="business_type",
+        recommendation="Confirm customer has a genuine SaaS resale channel.",
+    )
+
+
+def check_entity_exemption_match(
+    fields: ExtractedFields,
+    entity_type: EntityType,
+    state: str,
+) -> CheckResult | None:
+    category = _derive_exemption_category(fields)
+    if category is None:
+        return None
+
+    cfg = load_config("reasonableness_rules.json")
+    mismatches = cfg.get("wrong_box_rules", {})
+    state_rules = load_config("state_rules.json")
+    sst_states = set(state_rules.get("sst_member_states", []))
+
+    state_upper = (state or "").strip().upper()
+    is_sst = state_upper in sst_states
+    sev = CheckSeverity.SOFT_FLAG if is_sst else CheckSeverity.REASONABLENESS
+
+    gov_entities = {EntityType.FEDERAL_GOVERNMENT, EntityType.STATE_GOVERNMENT, EntityType.LOCAL_GOVERNMENT, EntityType.TRIBAL}
+    mismatch_reason: str | None = None
+
+    if entity_type in gov_entities and category in {ExemptionCategory.MANUFACTURING, ExemptionCategory.AGRICULTURE}:
+        mismatch_reason = "Government entity appears to have selected an inapplicable manufacturing/agriculture exemption box."
+        sev = CheckSeverity.INFO
+    elif entity_type in {EntityType.NONPROFIT_501C3, EntityType.EXEMPT_ORG_OTHER, EntityType.RELIGIOUS, EntityType.EDUCATIONAL} and category == ExemptionCategory.RESALE:
+        mismatch_reason = "Nonprofit entity claiming resale is unusual and should be reviewed."
+    elif entity_type == EntityType.FOR_PROFIT and category == ExemptionCategory.GOVERNMENT:
+        mismatch_reason = "For-profit entity appears to claim a government exemption."
+
+    if not mismatch_reason:
+        return CheckResult(
+            check_name="reasonableness.entity_exemption_match",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message="Entity type and exemption category are not obviously mismatched.",
+        )
+
+    if sev == CheckSeverity.INFO:
+        return CheckResult(
+            check_name="reasonableness.entity_exemption_match",
+            passed=False,
+            severity=CheckSeverity.INFO,
+            message=f"{mismatch_reason} Government status still supports exemption; note only.",
+            recommendation=mismatches.get("government_wrong_box", {}).get("note") if isinstance(mismatches, dict) else None,
+        )
+
+    review_message = "SST four-corners protections may reduce seller risk." if is_sst else "Good-faith documentation standard applies."
+    return CheckResult(
+        check_name="reasonableness.entity_exemption_match",
+        passed=False,
+        severity=sev,
+        message=f"{mismatch_reason} {review_message}",
+        recommendation="Route for manual review of correct exemption basis.",
+    )
+
+
+def check_saas_taxability(state: str) -> CheckResult:
+    state_upper = (state or "").strip().upper()
+    taxability = load_config("state_rules.json").get("taxability", {})
+    record = taxability.get(state_upper, {})
+
+    if record.get("no_sales_tax"):
+        return CheckResult(
+            check_name="info.saas_taxability",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=f"{state_upper} has no sales tax.",
+        )
+
+    if record.get("taxable") is False:
+        note = f" {record.get('note')}" if record.get("note") else ""
+        return CheckResult(
+            check_name="info.saas_taxability",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=f"SaaS is not taxable in {state_upper}. Certificate on file as insurance but may not be required.{note}",
+        )
+
+    if record.get("taxable") is True:
+        rate = record.get("rate", "state rate")
+        return CheckResult(
+            check_name="info.saas_taxability",
+            passed=True,
+            severity=CheckSeverity.INFO,
+            message=f"SaaS is taxable in {state_upper} at {rate}. Certificate IS required for exempt transactions.",
+        )
+
+    return CheckResult(
+        check_name="info.saas_taxability",
+        passed=True,
+        severity=CheckSeverity.INFO,
+        message=f"SaaS taxability not found for {state_upper}; verify state treatment manually.",
     )
