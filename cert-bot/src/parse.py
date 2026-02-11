@@ -1,7 +1,7 @@
 import re
 from datetime import date
 
-from .models import ExtractedFields, FormType
+from .models import EntityType, ExtractedFields, FormType
 from .utils import load_config, normalize_state, parse_date
 
 
@@ -191,6 +191,53 @@ def identify_form_type(raw_text: str) -> tuple[FormType, float]:
         confidence = min(confidence, 0.45)
 
     return best_form, round(confidence, 3)
+
+
+def map_llm_form_type(form_type_str: str) -> FormType:
+    """Map free-text LLM form type strings to known FormType enum values."""
+    if not form_type_str:
+        return FormType.UNKNOWN
+
+    normalized = re.sub(r"\s+", " ", form_type_str.strip().lower())
+
+    mappings: list[tuple[FormType, tuple[str, ...]]] = [
+        (FormType.TX_01_339, ("01-339", "texas 01-339", "tx 01-339")),
+        (FormType.PA_REV_1220, ("rev-1220", "pa rev-1220", "pennsylvania rev-1220")),
+        (FormType.NY_ST_121, ("st-121", "ny st-121", "new york st-121", "exempt use certificate")),
+        (FormType.FL_DR_14, ("dr-14", "fl dr-14", "florida dr-14")),
+        (FormType.OH_STEC_B, ("stec-b", "stec b", "oh stec-b", "ohio stec-b")),
+        (FormType.MTC_UNIFORM, ("mtc uniform", "multijurisdictional exemption certificate", "uniform certificate")),
+        (FormType.NY_GOV_LETTER, ("ny government letter", "new york government letter")),
+        (FormType.FEDERAL_LETTERHEAD, ("federal agency letter", "federal letter", "federal agency")),
+        (FormType.SST_F0003, ("sst f0003", "f0003", "streamlined sales tax")),
+    ]
+
+    for enum_value, tokens in mappings:
+        if any(token in normalized for token in tokens):
+            return enum_value
+
+    return FormType.UNKNOWN
+
+
+def map_llm_entity_type(entity_str: str) -> EntityType:
+    """Map LLM entity_type values to EntityType enum values."""
+    if not entity_str:
+        return EntityType.UNKNOWN
+
+    normalized = entity_str.strip().lower()
+    mapping = {
+        "federal_government": EntityType.FEDERAL_GOVERNMENT,
+        "state_government": EntityType.STATE_GOVERNMENT,
+        "local_government": EntityType.LOCAL_GOVERNMENT,
+        "tribal": EntityType.TRIBAL,
+        "nonprofit_501c3": EntityType.NONPROFIT_501C3,
+        "nonprofit_other": EntityType.EXEMPT_ORG_OTHER,
+        "educational": EntityType.EDUCATIONAL,
+        "religious": EntityType.RELIGIOUS,
+        "for_profit": EntityType.FOR_PROFIT,
+        "unknown": EntityType.UNKNOWN,
+    }
+    return mapping.get(normalized, EntityType.UNKNOWN)
 
 
 def _extract_after_labels(raw_text: str, labels: list[str], max_chars: int = 180) -> str | None:
