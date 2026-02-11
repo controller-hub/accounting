@@ -5,6 +5,19 @@ from .models import ExtractedFields, FormType
 from .utils import load_config, normalize_state, parse_date
 
 
+STATE_SPECIFIC_FORM_EXCLUSIONS = {
+    FormType.MTC_UNIFORM,
+    FormType.SST_F0003,
+    FormType.FEDERAL_SF_1094,
+    FormType.FEDERAL_GSA_CARD,
+    FormType.FEDERAL_LETTERHEAD,
+    FormType.GOVERNMENT_ISSUED_CARD,
+    FormType.STATE_ISSUED_CERT,
+    FormType.CUSTOM_LETTER,
+    FormType.UNKNOWN,
+}
+
+
 def _safe_form_type(name: str) -> FormType:
     try:
         return FormType[name]
@@ -15,6 +28,67 @@ def _safe_form_type(name: str) -> FormType:
 def _compile_label_pattern(label: str) -> re.Pattern[str]:
     return re.compile(rf"(?i){re.escape(label)}\s*[:\-]?\s*(.+)")
 
+
+def _normalize_label_text(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+
+
+def _line_has_label(line: str, labels: list[str]) -> bool:
+    normalized_line = _normalize_label_text(line)
+    return any(_normalize_label_text(label) in normalized_line for label in labels)
+
+
+def _extract_same_line_value(line: str, labels: list[str]) -> str | None:
+    for label in labels:
+        pattern = re.compile(rf"(?i){re.escape(label)}\s*[:\-]\s*(.+)$")
+        match = pattern.search(line)
+        if match:
+            value = re.sub(r"\s+", " ", match.group(1)).strip(" :-")
+            if value:
+                return value
+    return None
+
+
+def _next_non_empty(lines: list[str], start_idx: int) -> str | None:
+    for idx in range(start_idx, len(lines)):
+        candidate = lines[idx].strip()
+        if candidate:
+            return candidate
+    return None
+
+
+def _is_label_line(line: str) -> bool:
+    if not line.strip():
+        return False
+    if re.match(r"^\s*[A-Za-z][A-Za-z\s,&()\-/]{2,35}\s*[:.]\s*$", line):
+        return True
+    lowered = line.lower()
+    label_keywords = [
+        "name of purchaser",
+        "purchaser name",
+        "buyer",
+        "address",
+        "city state",
+        "city, state",
+        "city. state",
+        "from",
+        "following reason",
+        "date",
+        "signature",
+        "title",
+        "seller",
+        "vendor",
+    ]
+    return any(keyword in lowered for keyword in label_keywords)
+
+
+
+def _merge_labels(custom_labels: list[str] | None, default_labels: list[str]) -> list[str]:
+    merged = list(default_labels)
+    for label in custom_labels or []:
+        if label not in merged:
+            merged.append(label)
+    return merged
 
 def identify_form_type(raw_text: str) -> tuple[FormType, float]:
     """Identify the certificate form type from extracted text."""
@@ -74,45 +148,49 @@ def identify_form_type(raw_text: str) -> tuple[FormType, float]:
 
 
 def _extract_after_labels(raw_text: str, labels: list[str], max_chars: int = 180) -> str | None:
-    for label in labels:
-        pattern = _compile_label_pattern(label)
-        for line in raw_text.splitlines():
-            match = pattern.search(line)
-            if match:
-                value = re.sub(r"\s+", " ", match.group(1)).strip(" :-")
-                if value:
-                    return value[:max_chars]
+    lines = raw_text.splitlines()
 
-    all_lines = raw_text.splitlines()
-    for idx, line in enumerate(all_lines):
-        line_lower = line.lower()
-        for label in labels:
-            if label.lower() in line_lower and idx + 1 < len(all_lines):
-                nxt = all_lines[idx + 1].strip()
-                if nxt and len(nxt) <= max_chars:
-                    return nxt
+    for idx, line in enumerate(lines):
+        if not _line_has_label(line, labels):
+            continue
+
+        same_line = _extract_same_line_value(line, labels)
+        if same_line:
+            return same_line[:max_chars]
+
+        next_line = _next_non_empty(lines, idx + 1)
+        if next_line:
+            return next_line[:max_chars]
+
     return None
 
 
 def _extract_address(raw_text: str, labels: list[str]) -> str | None:
     lines = raw_text.splitlines()
+
     for i, line in enumerate(lines):
-        low = line.lower()
-        if any(label.lower() in low for label in labels):
-            possible = []
-            tail = re.split(r":", line, maxsplit=1)
-            if len(tail) == 2 and tail[1].strip():
-                possible.append(tail[1].strip())
-            for j in range(i + 1, min(i + 4, len(lines))):
-                nxt = lines[j].strip()
-                if not nxt:
+        if not _line_has_label(line, labels):
+            continue
+
+        collected: list[str] = []
+
+        same_line = _extract_same_line_value(line, labels)
+        if same_line:
+            collected.append(same_line)
+
+        for j in range(i + 1, len(lines)):
+            nxt = lines[j].strip()
+            if not nxt:
+                if collected:
                     break
-                if re.search(r"(date|signature|seller|purchaser|reason)", nxt, flags=re.I):
-                    break
-                possible.append(nxt)
-            value = ", ".join(possible).strip(" ,")
-            if value:
-                return re.sub(r"\s+", " ", value)
+                continue
+            if _is_label_line(nxt):
+                break
+            collected.append(nxt)
+
+        if collected:
+            return re.sub(r"\s+", " ", ", ".join(collected).strip(" ,"))
+
     return None
 
 
@@ -126,15 +204,22 @@ def _find_date_in_text(raw_text: str, labels: list[str]) -> date | None:
     ]
 
     lines = raw_text.splitlines()
-    for line in lines:
+    for idx, line in enumerate(lines):
+        haystacks = [line]
+        if idx + 1 < len(lines):
+            haystacks.append(lines[idx + 1])
+
         if labels and not any(label.lower() in line.lower() for label in labels):
             continue
-        for pat in date_patterns:
-            m = re.search(pat, line)
-            if m:
-                parsed = parse_date(m.group(0))
-                if parsed and date(2010, 1, 1) <= parsed <= date.today():
-                    return parsed
+
+        for hay in haystacks:
+            for pat in date_patterns:
+                m = re.search(pat, hay)
+                if m:
+                    parsed = parse_date(m.group(0))
+                    if parsed and date(2010, 1, 1) <= parsed <= date.today():
+                        return parsed
+
     for pat in date_patterns:
         for m in re.finditer(pat, raw_text):
             parsed = parse_date(m.group(0))
@@ -155,6 +240,35 @@ def _extract_tax_id(raw_text: str) -> str | None:
     return None
 
 
+def _extract_city_state_zip(raw_text: str, labels: list[str]) -> tuple[str | None, str | None, str | None]:
+    lines = raw_text.splitlines()
+    for idx, line in enumerate(lines):
+        if not _line_has_label(line, labels):
+            continue
+
+        value = _extract_same_line_value(line, labels) or _next_non_empty(lines, idx + 1)
+        if not value:
+            continue
+
+        match = re.search(r"^\s*(.+?),\s*([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)\s*$", value)
+        if match:
+            city = re.sub(r"\s+", " ", match.group(1)).strip(" ,")
+            state = normalize_state(match.group(2))
+            postal = match.group(3)
+            return city or None, state or None, postal or None
+
+    return None, None, None
+
+
+def _state_from_form_type(form_type: FormType) -> str | None:
+    if form_type in STATE_SPECIFIC_FORM_EXCLUSIONS:
+        return None
+    match = re.match(r"^([A-Z]{2})_", form_type.name)
+    if match:
+        return match.group(1)
+    return None
+
+
 def extract_fields_regex(raw_text: str, form_type: FormType) -> ExtractedFields:
     """Extract structured fields from certificate text using label-based parsing."""
     forms = load_config("form_templates.json").get("forms", {})
@@ -163,20 +277,30 @@ def extract_fields_regex(raw_text: str, form_type: FormType) -> ExtractedFields:
 
     fields = ExtractedFields(raw_text=raw_text, form_type_detected=form_type)
 
-    purchaser_name_labels = labels.get("purchaser_name", ["Name of purchaser", "Purchaser", "Buyer"])
+    purchaser_name_labels = _merge_labels(labels.get("purchaser_name"), ["Name of purchaser", "Purchaser name", "Buyer"])
     fields.purchaser_name = _extract_after_labels(raw_text, purchaser_name_labels)
 
-    purchaser_addr_labels = labels.get("purchaser_address", ["Address of purchaser", "Address"])
+    purchaser_addr_labels = _merge_labels(labels.get("purchaser_address"), ["Address of purchaser", "Address"])
     fields.purchaser_address = _extract_address(raw_text, purchaser_addr_labels)
 
-    seller_labels = labels.get("seller_name", ["Name of seller", "Seller", "Vendor"])
+    city_state_labels = _merge_labels(labels.get("purchaser_city_state_zip"), ["City, State", "City. State"])
+    purchaser_city, purchaser_state, purchaser_zip = _extract_city_state_zip(raw_text, city_state_labels)
+    fields.purchaser_city = purchaser_city
+    fields.purchaser_state = purchaser_state
+    fields.purchaser_zip = purchaser_zip
+
+    seller_labels = _merge_labels(labels.get("seller_name"), ["Name of seller", "Seller", "Vendor", "from:"])
     fields.seller_name = _extract_after_labels(raw_text, seller_labels)
 
-    reason_labels = labels.get("exemption_reason", ["Reason", "Nature of business", "Type of exemption"])
+    reason_labels = _merge_labels(labels.get("exemption_reason"), ["Reason", "Nature of business", "Type of exemption", "following reason:"])
     fields.exemption_reason = _extract_after_labels(raw_text, reason_labels)
 
-    date_labels = labels.get("cert_date", ["Date", "Signed", "Effective"])
+    date_labels = _merge_labels(labels.get("cert_date"), ["Date", "Signed", "Effective"])
     fields.cert_date = _find_date_in_text(raw_text, date_labels)
+
+    signature_labels = ["Title", "Signature"]
+    signature_hit = any(_line_has_label(line, signature_labels) for line in raw_text.splitlines())
+    fields.signature_present = signature_hit or fields.cert_date is not None
 
     tax_id = _extract_tax_id(raw_text)
     fields.purchaser_tax_id = tax_id
@@ -184,27 +308,26 @@ def extract_fields_regex(raw_text: str, form_type: FormType) -> ExtractedFields:
     fields.permit_number = tax_id
     fields.account_number = tax_id
 
-    if fields.purchaser_address:
+    if not fields.purchaser_state and fields.purchaser_address:
         state_match = re.search(r"\b([A-Z]{2})\b\s+\d{5}(?:-\d{4})?", fields.purchaser_address)
         if state_match:
             fields.purchaser_state = normalize_state(state_match.group(1))
         else:
             fields.purchaser_state = normalize_state(fields.purchaser_address)
 
+    if not fields.purchaser_zip and fields.purchaser_address:
+        zip_match = re.search(r"\b(\d{5}(?:-\d{4})?)\b", fields.purchaser_address)
+        if zip_match:
+            fields.purchaser_zip = zip_match.group(1)
+
     return fields
 
 
 def extract_exemption_states(raw_text: str, form_type: FormType) -> list[str]:
     """Extract which states the exemption covers."""
-    implicit_state_by_form = {
-        FormType.TX_01_339: "TX",
-        FormType.MD_GOV_1: "MD",
-        FormType.MD_NONGOV_1: "MD",
-        FormType.FL_DR_14: "FL",
-        FormType.NY_ST_119_1: "NY",
-    }
-    if form_type in implicit_state_by_form:
-        return [implicit_state_by_form[form_type]]
+    implicit_state = _state_from_form_type(form_type)
+    if implicit_state:
+        return [implicit_state]
 
     text = raw_text
     states: set[str] = set()
