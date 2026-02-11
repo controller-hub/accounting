@@ -96,3 +96,39 @@ def test_parse_certificate_populates_fields():
     assert parsed.purchaser_state == "TX"
     assert parsed.exemption_states == ["TX"]
 
+
+
+def test_extracts_next_line_values_for_tx_layout():
+    text = (
+        "Texas Sales and Use Tax Exemption Certification Form 01-339\n"
+        "Name of purchaser. firm or agency\n"
+        "City of Mont Belvieu\n"
+        "Address (Street & number. P O. Box or Route number)\n"
+        "11607 Eagle Drive/P.O. Box 1048\n"
+        "City, State. ZIP code\n"
+        "Mont Belvieu, TX 77580\n"
+        "from:\n"
+        "Acme Supplies\n"
+        "The purchaser claims this exemption for the following reason:\n"
+        "Tax exempt municipal government\n"
+        "Signature\n"
+        "Date\n"
+        "01/15/2025\n"
+    )
+
+    parsed = parse_certificate(text)
+
+    assert parsed.purchaser_name == "City of Mont Belvieu"
+    assert parsed.purchaser_address == "11607 Eagle Drive/P.O. Box 1048"
+    assert parsed.purchaser_city == "Mont Belvieu"
+    assert parsed.purchaser_state == "TX"
+    assert parsed.purchaser_zip == "77580"
+    assert parsed.seller_name == "Acme Supplies"
+    assert parsed.exemption_reason == "Tax exempt municipal government"
+    assert parsed.signature_present is True
+
+
+def test_extract_exemption_states_uses_state_specific_form_type():
+    parsed = parse_certificate("Ohio Sales and Use Tax Unit Exemption Certificate STEC-B")
+    assert parsed.form_type_detected == FormType.OH_STEC_B
+    assert parsed.exemption_states == ["OH"]
