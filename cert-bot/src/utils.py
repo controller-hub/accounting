@@ -1,4 +1,6 @@
 import json
+import re
+from datetime import date, datetime
 from pathlib import Path
 
 
@@ -147,3 +149,57 @@ def normalize_state(state_input: str) -> str:
             return abbreviation
 
     return normalized[:2] if len(normalized) >= 2 else normalized
+
+
+def parse_date(date_str: str) -> date | None:
+    """
+    Parse a date string in common tax-form formats.
+
+    Returns None if parsing fails or year is outside 2000..(current year + 1).
+    """
+    if not date_str:
+        return None
+
+    value = date_str.strip()
+    if not value:
+        return None
+
+    formats = [
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%m.%d.%Y",
+        "%Y-%m-%d",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%d %B %Y",
+        "%d %b %Y",
+    ]
+
+    parsed: date | None = None
+    for fmt in formats:
+        try:
+            parsed = datetime.strptime(value, fmt).date()
+            break
+        except ValueError:
+            continue
+
+    if parsed is None:
+        two_digit = re.fullmatch(r"\s*(\d{1,2})[\/-](\d{1,2})[\/-](\d{2})\s*", value)
+        if two_digit:
+            month = int(two_digit.group(1))
+            day = int(two_digit.group(2))
+            yy = int(two_digit.group(3))
+            year = 2000 + yy if yy <= 30 else 1900 + yy
+            try:
+                parsed = date(year, month, day)
+            except ValueError:
+                return None
+
+    if parsed is None:
+        return None
+
+    current_year = datetime.utcnow().year
+    if parsed.year < 2000 or parsed.year > current_year + 1:
+        return None
+
+    return parsed
