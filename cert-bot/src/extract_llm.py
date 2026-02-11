@@ -6,7 +6,6 @@ import logging
 import os
 from datetime import date
 from io import BytesIO
-from pathlib import Path
 
 from .ingest import extract_text_from_pdf
 from .models import ExtractedFields
@@ -43,19 +42,7 @@ Important rules:
 
 
 def _load_openai_api_key() -> str | None:
-    env_key = os.getenv("OPENAI_API_KEY")
-    if env_key:
-        return env_key
-
-    config_path = Path(__file__).parent.parent / "config" / "openai_config.json"
-    if not config_path.exists():
-        return None
-
-    try:
-        payload = json.loads(config_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
-    return payload.get("api_key")
+    return os.getenv("OPENAI_API_KEY")
 
 
 def _parse_iso_date(value: str | None) -> date | None:
@@ -89,7 +76,7 @@ def _fallback_regex_from_pdf(pdf_path: str) -> ExtractedFields:
     return fields
 
 
-def extract_fields_via_llm(pdf_path: str) -> ExtractedFields:
+def extract_fields_via_llm(pdf_path: str, fallback_to_regex: bool = True) -> ExtractedFields:
     """Extract certificate fields via GPT-4o vision, with regex fallback on API failure."""
     try:
         api_key = _load_openai_api_key()
@@ -144,5 +131,7 @@ def extract_fields_via_llm(pdf_path: str) -> ExtractedFields:
         )
         return fields
     except Exception as exc:
+        if not fallback_to_regex:
+            raise
         logger.warning("LLM extraction failed, falling back to regex parsing: %s", exc)
         return _fallback_regex_from_pdf(pdf_path)
