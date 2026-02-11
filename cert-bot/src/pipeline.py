@@ -1,11 +1,17 @@
 from __future__ import annotations
 
+import logging
+
 from .classify import check_entity_form_compatibility, classify_entity, route_to_pathway
 from .disposition import build_validation_result, determine_disposition
+from .extract_llm import extract_fields_via_llm
 from .ingest import extract_certificate
 from .models import CheckResult, CheckSeverity
 from .parse import parse_certificate
 from .validate import run_all_checks
+
+
+logger = logging.getLogger(__name__)
 
 
 def _resolve_state(state: str | None, extracted_state: str | None) -> str:
@@ -14,11 +20,20 @@ def _resolve_state(state: str | None, extracted_state: str | None) -> str:
 
 def validate_certificate(pdf_path: str, state: str = None):
     extracted = extract_certificate(pdf_path)
-    parsed = parse_certificate(extracted.raw_text or "")
+    llm_fields = extract_fields_via_llm(pdf_path)
+
+    if llm_fields.extraction_confidence >= 0.5:
+        parsed = llm_fields
+        logger.info("Using extraction method: llm_vision")
+    else:
+        parsed = parse_certificate(extracted.raw_text or "")
+        logger.info("Using extraction method: regex")
 
     # preserve ingest-derived values if parse didn't populate them
     if parsed.signature_present is None:
         parsed.signature_present = extracted.signature_present
+    if not parsed.raw_text:
+        parsed.raw_text = extracted.raw_text
     parsed.extraction_confidence = max(parsed.extraction_confidence, extracted.extraction_confidence)
 
     form_type = parsed.form_type_detected
@@ -52,4 +67,3 @@ def validate_certificate(pdf_path: str, state: str = None):
         disposition=disposition,
         confidence_score=confidence_score,
     )
-
