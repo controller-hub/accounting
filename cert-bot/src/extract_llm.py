@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import base64
+from importlib import import_module
 import json
 import logging
 import os
 from datetime import date
-from io import BytesIO
+
 
 from .ingest import extract_text_from_pdf
 from .models import ExtractedFields
@@ -52,14 +53,13 @@ def _parse_iso_date(value: str | None) -> date | None:
 
 
 def _pdf_to_base64_images(pdf_path: str, max_pages: int = 2) -> list[str]:
-    from pdf2image import convert_from_path
-
-    images = convert_from_path(pdf_path, first_page=1, last_page=max_pages)
     encoded: list[str] = []
-    for image in images:
-        buffer = BytesIO()
-        image.save(buffer, format="PNG")
-        encoded.append(base64.b64encode(buffer.getvalue()).decode("utf-8"))
+    fitz = import_module("fitz")
+    with fitz.open(pdf_path) as doc:
+        for page_index in range(min(max_pages, len(doc))):
+            page = doc.load_page(page_index)
+            pix = page.get_pixmap(dpi=200)
+            encoded.append(base64.b64encode(pix.tobytes("png")).decode("utf-8"))
     return encoded
 
 
