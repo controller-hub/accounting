@@ -1,5 +1,8 @@
 from importlib import import_module
+from io import BytesIO
 from pathlib import Path
+
+from PIL import Image
 
 from .models import ExtractedFields
 
@@ -55,12 +58,14 @@ def extract_text_from_pdf(pdf_path: str) -> dict:
     ocr_pages: list[str] = []
     ocr_page_count = page_count
     try:
-        convert_from_path = import_module("pdf2image").convert_from_path
         pytesseract = import_module("pytesseract")
-        images = convert_from_path(str(path))
-        ocr_page_count = len(images)
-        for image in images:
-            ocr_pages.append(pytesseract.image_to_string(image) or "")
+        fitz = import_module("fitz")
+        with fitz.open(path) as doc:
+            ocr_page_count = len(doc)
+            for page in doc:
+                pix = page.get_pixmap(dpi=200)
+                image = Image.open(BytesIO(pix.tobytes("png")))
+                ocr_pages.append(pytesseract.image_to_string(image) or "")
     except Exception:
         ocr_pages = []
 
@@ -89,7 +94,7 @@ def detect_signature(pdf_path: str, page_num: int = 0, region: str = "bottom_20_
     Detect if a signature-like mark exists in the expected region.
 
     Approach:
-    1. Convert the specified page to an image (use pdf2image)
+    1. Convert the specified page to an image (use PyMuPDF)
     2. Crop to the signature region:
        - "bottom_20_percent": bottom 20% of page (default for most forms)
        - "bottom_30_percent": bottom 30% (for forms with larger signature areas)
@@ -100,16 +105,14 @@ def detect_signature(pdf_path: str, page_num: int = 0, region: str = "bottom_20_
     This is intentionally simple — we're detecting presence, not verifying identity.
     """
     try:
-        convert_from_path = import_module("pdf2image").convert_from_path
-        images = convert_from_path(
-            str(pdf_path),
-            first_page=page_num + 1,
-            last_page=page_num + 1,
-        )
-        if not images:
-            return False
+        fitz = import_module("fitz")
+        with fitz.open(pdf_path) as doc:
+            if page_num < 0 or page_num >= len(doc):
+                return False
+            page = doc.load_page(page_num)
+            pix = page.get_pixmap(dpi=200)
 
-        image = images[0].convert("L")
+        image = Image.open(BytesIO(pix.tobytes("png"))).convert("L")
         width, height = image.size
         start_pct = 0.8 if region == "bottom_20_percent" else 0.7
 
