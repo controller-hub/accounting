@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from .models import AnalysisReports, Anomaly, CustomerSummary, DataQualityReport, PortfolioSummary, TermsDistribution
 
 
@@ -10,6 +12,15 @@ def build_reports(
     anomalies: list[Anomaly],
     data_quality: DataQualityReport,
 ) -> AnalysisReports:
+    cx_escalation_eligible = lambda c: (
+        abs(c.total_ar) >= Decimal("5000")
+        and (
+            (not c.is_government and c.oldest_past_due_days >= 45)
+            or ((c.billing_method or "").lower().startswith("auto") and c.oldest_past_due_days >= 21)
+            or (c.is_government and c.oldest_past_due_days >= 90)
+        )
+    )
+
     top10 = [{"customer_name": c.customer_name, "amount": str(c.total_past_due), "days": c.oldest_past_due_days} for c in sorted(customers, key=lambda x: x.total_past_due, reverse=True)[:10]]
     red_anomalies = [a.model_dump(mode="json") for a in anomalies if a.severity == "red"]
 
@@ -41,7 +52,7 @@ def build_reports(
         "auto_pay_failures": [c.model_dump(mode="json") for c in customers if (c.billing_method or "").lower().startswith("auto") and c.oldest_past_due_days > 5],
         "tier_1_remittance": [c.model_dump(mode="json") for c in customers if c.priority_tier == "Tier 1" and (c.billing_method or "").lower() == "remittance"],
         "tier_2": [c.model_dump(mode="json") for c in customers if c.priority_tier == "Tier 2"],
-        "cx_escalation_candidates": [c.model_dump(mode="json") for c in customers if ((not c.is_government and c.oldest_past_due_days >= 45) or ((c.billing_method or "").lower().startswith("auto") and c.oldest_past_due_days >= 21) or (c.is_government and c.oldest_past_due_days >= 90))],
+        "cx_escalation_candidates": [c.model_dump(mode="json") for c in customers if cx_escalation_eligible(c)],
         "data_quality_actions": data_quality.model_dump(mode="json"),
     }
 
@@ -54,7 +65,7 @@ def build_reports(
             "context_note": c.suggested_action,
         }
         for c in customers
-        if ((not c.is_government and c.oldest_past_due_days >= 45) or ((c.billing_method or "").lower().startswith("auto") and c.oldest_past_due_days >= 21) or (c.is_government and c.oldest_past_due_days >= 90))
+        if cx_escalation_eligible(c)
     ]
 
     return AnalysisReports(cfo_summary=cfo, controller_detail=controller, ar_action_plan=action_sections, cx_escalation=cx, slack_blocks={})
