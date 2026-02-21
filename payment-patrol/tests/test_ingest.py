@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.ingest import parse_csv
+from src.ingest import _parse_date, parse_csv
 
 
 def test_parse_fleetio_row_count() -> None:
@@ -20,6 +20,12 @@ def test_date_parsing_supports_two_formats() -> None:
     txs, _ = parse_csv(Path("tests/fixtures/sample_fleetio.csv").read_bytes(), entity="fleetio")
     assert any(t.document_number == "INV-1001" and t.invoice_date.isoformat() == "2026-01-05" for t in txs)
     assert any(t.document_number == "INV-1002" and t.invoice_date.isoformat() == "2026-01-08" for t in txs)
+
+
+def test_parse_date_supports_two_digit_year() -> None:
+    parsed = _parse_date("8/31/25")
+    assert parsed is not None
+    assert parsed.isoformat() == "2025-08-31"
 
 
 def test_blank_fields_do_not_crash() -> None:
