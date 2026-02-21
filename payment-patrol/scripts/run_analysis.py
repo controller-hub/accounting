@@ -62,6 +62,7 @@ def main() -> None:
             for name, total in sorted(intercompany_by_customer.items())
         ],
     )
+    portfolio.intercompany_ar = intercompany.intercompany_total
 
     reports = build_reports(portfolio, customers, terms, anomalies, data_quality)
     reports.slack_blocks = {
