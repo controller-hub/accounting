@@ -36,7 +36,10 @@ def _parse_date(value: str) -> Optional[date]:
 
 
 def _parse_decimal(value: str) -> Decimal:
-    return Decimal((value or "0").replace(",", "").strip() or "0")
+    normalized = (value or "0").replace(",", "").strip()
+    if normalized.startswith("(") and normalized.endswith(")"):
+        normalized = f"-{normalized[1:-1].strip()}"
+    return Decimal(normalized or "0")
 
 
 def _parse_int(value: str) -> Optional[int]:

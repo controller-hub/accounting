@@ -12,7 +12,7 @@ HIGH_PATTERNS = [
     r"\btransit authority\b", r"\bhousing authority\b", r"\bport authority\b", r"\bfire district\b",
     r"\bsanitation district\b", r"\buniversity of\b", r"\bus army\b", r"\bus navy\b",
     r"\bus air force\b", r"\bus marine\b", r"\bcoast guard\b", r"\bdepartment of defense\b",
-    r"\bva\b", r"\bbureau of\b", r"\bnational guard\b", r"\bmunicipal\b",
+    r"\bva\b", r"\bbureau of\b", r"\bnational guard\b", r"\badministration\b", r"\bmunicipal\b",
 ]
 MEDIUM_PATTERNS = [r"\bauthority\b", r"\bdistrict\b", r"\bcommission\b", r"\bboard of education\b", r"\bcommunity college\b", r"\btribal\b"]
 
