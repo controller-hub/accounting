@@ -27,7 +27,7 @@ def _parse_date(value: str) -> Optional[date]:
     value = (value or "").strip()
     if not value:
         return None
-    for fmt in ("%m/%d/%Y", "%Y-%m-%d"):
+    for fmt in ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d"):
         try:
             return datetime.strptime(value, fmt).date()
         except ValueError:
@@ -68,17 +68,31 @@ def _normalize_header(value: str | None) -> str:
 
 
 def parse_csv(content: bytes, entity: str) -> tuple[list[ARTransaction], Decimal]:
-    rows = csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
-    parsed_headers = [_normalize_header(h) for h in (rows.fieldnames or [])]
+    csv_rows = csv.reader(io.StringIO(content.decode("utf-8-sig")))
+    raw_headers = next(csv_rows, [])
+    parsed_headers = [_normalize_header(h) for h in raw_headers]
     expected_headers = [_normalize_header(h) for h in FLEETIO_HEADERS]
-    if parsed_headers != expected_headers:
+    strip_leading_internal_id = (
+        len(parsed_headers) >= 2 and parsed_headers[0] == "Internal ID" and parsed_headers[1] == expected_headers[0]
+    )
+    if strip_leading_internal_id:
+        parsed_headers = parsed_headers[1:]
+
+    if parsed_headers[:len(expected_headers)] != expected_headers:
         raise ValueError("CSV headers do not match expected NetSuite export schema")
 
     transactions: list[ARTransaction] = []
     signed_total = Decimal("0")
     allowed = {"Invoice", "Credit Memo"} if entity == "fleetio" else {"Invoice", "Credit Memo", "Payment"}
 
-    for row in rows:
+    for row_values in csv_rows:
+        if strip_leading_internal_id:
+            row_values = row_values[1:]
+        row_values = row_values[:len(expected_headers)]
+        if len(row_values) < len(expected_headers):
+            row_values += [""] * (len(expected_headers) - len(row_values))
+        row = dict(zip(expected_headers, row_values))
+
         tx_type = row["Type"].strip()
         if tx_type not in allowed:
             continue
