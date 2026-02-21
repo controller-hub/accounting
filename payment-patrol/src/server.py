@@ -13,7 +13,8 @@ from .customer_metrics import build_customer_summaries
 from .data_quality import build_data_quality_report
 from .formatters import build_action_blocks, build_cfo_blocks, build_controller_blocks, build_cx_blocks
 from .ingest import parse_csv
-from .models import AnalysisMeta, AnalysisResult
+from .intercompany import filter_intercompany
+from .models import AnalysisMeta, AnalysisResult, IntercompanyCustomerSummary, IntercompanySummary
 from .report_builder import build_reports
 from .scoring import score_customers
 from .terms_analysis import analyze_terms
@@ -39,17 +40,33 @@ async def analyze(
 
     content = await file.read()
     transactions, signed_total = parse_csv(content, entity=entity)
-    customers = build_customer_summaries(transactions)
+    external_transactions, intercompany_transactions = filter_intercompany(transactions)
+
+    customers = build_customer_summaries(external_transactions)
     customers = score_customers(customers)
 
     portfolio = compute_portfolio_summary(
-        transactions,
+        external_transactions,
         customers,
         Decimal(str(total_invoiced_amount)) if total_invoiced_amount is not None else None,
     )
-    terms = analyze_terms(transactions, portfolio.total_ar)
-    data_quality = build_data_quality_report(transactions)
+    terms = analyze_terms(external_transactions, portfolio.total_ar)
+    data_quality = build_data_quality_report(external_transactions)
     anomalies = detect_anomalies(portfolio, customers, prior_snapshot_json)
+
+    intercompany_by_customer: dict[str, Decimal] = {}
+    for transaction in intercompany_transactions:
+        intercompany_by_customer.setdefault(transaction.customer_name, Decimal("0"))
+        intercompany_by_customer[transaction.customer_name] += transaction.signed_amount_remaining
+
+    intercompany = IntercompanySummary(
+        intercompany_count=len(intercompany_transactions),
+        intercompany_total=sum((t.signed_amount_remaining for t in intercompany_transactions), Decimal("0")),
+        intercompany_customers=[
+            IntercompanyCustomerSummary(customer_name=name, signed_total=total)
+            for name, total in sorted(intercompany_by_customer.items())
+        ],
+    )
 
     reports = build_reports(portfolio, customers, terms, anomalies, data_quality)
     reports.slack_blocks = {
@@ -76,4 +93,5 @@ async def analyze(
         anomalies=anomalies,
         data_quality=data_quality,
         reports=reports,
+        intercompany=intercompany,
     )

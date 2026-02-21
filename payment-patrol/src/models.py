@@ -135,6 +135,17 @@ class AnalysisReports(BaseModel):
     slack_blocks: dict[str, list[dict[str, Any]]] = Field(default_factory=dict)
 
 
+class IntercompanyCustomerSummary(BaseModel):
+    customer_name: str
+    signed_total: Decimal
+
+
+class IntercompanySummary(BaseModel):
+    intercompany_count: int
+    intercompany_total: Decimal
+    intercompany_customers: list[IntercompanyCustomerSummary]
+
+
 class AnalysisResult(BaseModel):
     meta: AnalysisMeta
     portfolio: PortfolioSummary
@@ -144,3 +155,4 @@ class AnalysisResult(BaseModel):
     anomalies: list[Anomaly]
     data_quality: DataQualityReport
     reports: AnalysisReports
+    intercompany: IntercompanySummary
