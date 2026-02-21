@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.ingest import _parse_date, parse_csv
+from src.ingest import _parse_date, _parse_decimal, parse_csv
 
 
 def test_parse_fleetio_row_count() -> None:
@@ -26,6 +26,10 @@ def test_parse_date_supports_two_digit_year() -> None:
     parsed = _parse_date("8/31/25")
     assert parsed is not None
     assert parsed.isoformat() == "2025-08-31"
+
+
+def test_parse_decimal_supports_parenthesized_negative() -> None:
+    assert _parse_decimal("(1,050.70)") == _parse_decimal("-1050.70")
 
 
 def test_blank_fields_do_not_crash() -> None:
